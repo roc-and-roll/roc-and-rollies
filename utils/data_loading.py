@@ -82,6 +82,7 @@ def get_data_loader(dataset_json_path: Path, dataset_name: str, args: argparse.N
 
     if dataset_name == 'dice':
         dataset_class = functools.partial(AugmentedDataset, image_size=config['image_size'],
+                                          num_classes=config['num_classes'],
                                           num_augmentations=config['num_augmentations'])
         data_loader = build_data_loader(dataset_json_path, config, False, dataset_class=dataset_class,
                                         shuffle_off=validation, drop_last=(not validation), loader_func=loader_func)

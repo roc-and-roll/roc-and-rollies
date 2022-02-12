@@ -1,22 +1,19 @@
-import json
 import os
-from pathlib import Path
 from typing import Dict, Union
+from torch.nn.functional import one_hot
 
-import numpy
 import torch
-import torch.nn.functional as F
 from pytorch_training.data.json_dataset import JSONDataset
-from pytorch_training.images import is_image
 
 from utils.augment_dataset import augment_image
 
 
 class BaseDataset(JSONDataset):
 
-    def __init__(self, *args, image_size: int = None, **kwargs):
+    def __init__(self, *args, image_size: int = None, num_classes: int = 20, **kwargs):
         super().__init__(*args, **kwargs)
         self.image_size = image_size
+        self.num_classes = num_classes
 
     def load_json_data(self, json_data: Union[dict, list]):
         self.image_data = json_data
@@ -64,9 +61,9 @@ class AugmentedDataset(BaseDataset):
 
         label = int(self.image_data[actual_index]['chosen'])
 
+        l = torch.zeros((1,), dtype=torch.long)
+        l[0] = label - 1
         return {
             'images': input_image,
-            'labels': label
+            'labels': one_hot(l, num_classes=self.num_classes)
         }
-
-

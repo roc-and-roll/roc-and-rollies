@@ -11,6 +11,19 @@ from training_builder.base_train_builder import BaseSingleNetworkTrainBuilder
 from updater import StandardUpdater
 
 
+class ResNet18(torch.nn.Module):
+    def __init__(self, num_classes: int):
+        super().__init__()
+        self.network = models.resnet18(pretrained=True)
+        self.network.fc = torch.nn.Linear(in_features=512, out_features=num_classes, bias=True)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.network.forward(x)
+
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.nn.functional.softmax(self.forward(x), dim=1)
+
+
 class ResNetTrainBuilder(BaseSingleNetworkTrainBuilder):
 
     def __init__(self, *args, **kwargs):
@@ -24,7 +37,7 @@ class ResNetTrainBuilder(BaseSingleNetworkTrainBuilder):
         }
 
     def _initialize_network(self):
-        self.network = models.resnet18(pretrained=True)  # TODO: maybe move to BaseNetwork
+        self.network = ResNet18(self.config['num_classes'])
 
     def get_optimizers(self) -> Dict[str, Optimizer]:
         optimizer = GradientClipAdam(self.network.parameters(), **self.optimizer_opts)  # TODO: probs alright?
