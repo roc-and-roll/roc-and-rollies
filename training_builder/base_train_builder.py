@@ -9,6 +9,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 
+import global_config
 from networks import load_weights
 from networks.base_network import BaseNetwork
 
@@ -24,18 +25,17 @@ class BaseTrainBuilder:
         self.rank = rank
         self.world_size = world_size
 
-    def _prepare_network(self, segmentation_network: BaseNetwork,
-                         network_name: str = 'segmentation_network') -> BaseNetwork:
-        assert segmentation_network is not None, 'Segmentation network was not properly initialized!'
-        segmentation_network.to('cuda')
+    def _prepare_network(self, network: BaseNetwork, network_name: str = 'network') -> BaseNetwork:
+        assert network is not None, 'Network was not properly initialized!'
+        network.to(global_config.device)
         if self.fine_tune is not None:
-            load_weights(segmentation_network, self.fine_tune, key=network_name)
+            load_weights(network, self.fine_tune, key=network_name)
 
         if self.world_size > 1:
             distributed = functools.partial(DDP, device_ids=[self.rank], find_unused_parameters=True,
                                             broadcast_buffers=False, output_device=self.rank)
-            segmentation_network = distributed(segmentation_network)
-        return segmentation_network
+            network = distributed(network)
+        return network
 
     def _initialize_network(self):
         raise NotImplementedError
@@ -59,6 +59,7 @@ class BaseTrainBuilder:
         return None
 
     def get_image_plotter(self) -> Union[ImagePlotter, None]:
+        # TODO: maybe actually plot some images
         # if self.rank != 0:
         #     return None
         # plot_data_loader = self.val_data_loader if self.val_data_loader is not None else self.train_data_loader
@@ -81,14 +82,14 @@ class BaseSingleNetworkTrainBuilder(BaseTrainBuilder):
         super().__init__(*args, **kwargs)
 
     def get_networks_for_updater(self) -> Dict[str, BaseNetwork]:
-        return {'segmentation': self.network}
+        return {'network': self.network}
 
     def get_snapshotter(self) -> Union[Snapshotter, None]:
         if self.rank != 0:
             return None
         snapshotter = Snapshotter(
             {
-                'segmentation_network': strip_parallel_module(self.network),
+                'network': strip_parallel_module(self.network),
                 **self.get_optimizers(),
             },
             self.config['log_dir'],
