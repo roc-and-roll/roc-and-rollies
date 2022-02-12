@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Try!",
+      "type": "python",
+      "request": "launch",
+      "program": "try.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Train!",
+      "type": "python",
+      "request": "launch",
+      "program": "train.py",
+      "console": "integratedTerminal",
+      "args": ["--train", "train.json", "configs/model.yaml", "--debug"]
+    }
+  ]
+}

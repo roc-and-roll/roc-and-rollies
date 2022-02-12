@@ -59,10 +59,10 @@ class AugmentedDataset(BaseDataset):
         input_image = self.loader(path)
         if index // original_dataset_length != 0:
             # After first iteration through the original dataset, return augmented images
-            input_image, segmentation_image = augment_image(input_image, num_images=1)[0]
+            input_image = augment_image(input_image, num_images=1)[0]
         input_image = self.transforms(input_image)
 
-        label = int(self.image_data[index]['chosen'])
+        label = int(self.image_data[actual_index]['chosen'])
 
         return {
             'images': input_image,
