@@ -51,7 +51,6 @@ def main(args: argparse.Namespace, rank: int, world_size: int):
                                           validation=True)
     else:
         val_data_loader = None
-    return # TODO
 
     train_builder_class = get_train_builder_class(config)
     training_builder = train_builder_class(config, train_data_loader, val_data_loader, rank=rank, world_size=world_size)

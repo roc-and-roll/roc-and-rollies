@@ -6,6 +6,7 @@ from pytorch_training.optimizer import GradientClipAdam
 from torch.optim import Optimizer
 from torchvision import models
 
+import global_config
 from training_builder.base_train_builder import BaseSingleNetworkTrainBuilder
 from updater import StandardUpdater
 
@@ -34,7 +35,7 @@ class ResNetTrainBuilder(BaseSingleNetworkTrainBuilder):
             iterators={'images': self.train_data_loader},
             networks=self.get_networks_for_updater(),
             optimizers=self.get_optimizers(),
-            device='cuda',  # TODO: global flag for device? - global config
+            device=global_config.device,
             copy_to_device=(self.world_size == 1)
         )
         return updater

@@ -22,8 +22,8 @@
 
 - Scouting
 	- look into folders and look at color distribution of dice
-	- how large are images?
-	- All same size?
+	- **how large are images?**
+	- **All same size?**
 - Change image size?
 - don't sort by dice but sort by number instead?
 	- dice size doesn' matter
@@ -41,3 +41,4 @@
 
 - Confusion Matrix for validation data
 - maybe more out-of-domain data
+- 

@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, DistributedSampler
 from torchvision import transforms
 
 import global_config
-from data.segmentation_dataset import AugmentedDataset
+from data.dataset import AugmentedDataset
 
 
 def resilient_loader(path):
@@ -25,16 +25,19 @@ def resilient_loader(path):
         print(f"Could not load {path} with expeption: {e}")
         return Image.new('RGB', (256, 256))
 
+def get_transforms(image_size, input_dim):
+    transform_list = [
+        transforms.Resize((image_size, image_size)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5,) * input_dim, (0.5,) * input_dim)  # TODO: ok normalizazion
+    ]
+    transform_list = transforms.Compose(transform_list)
+    return transform_list
 
 def build_data_loader(image_path: Union[str, Path], config: dict, uses_absolute_paths: bool,
                       dataset_class: Type[JSONDataset], shuffle_off: bool = False,
                       loader_func: Callable = resilient_loader, drop_last: bool = True, collate_func: Callable = None) -> DataLoader:
-    transform_list = [
-        transforms.Resize((config['image_size'], config['image_size'])),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5,) * config['input_dim'], (0.5,) * config['input_dim'])
-    ]
-    transform_list = transforms.Compose(transform_list)
+    transform_list = get_transforms(config['image_size'], config['input_dim'])
 
     dataset = dataset_class(
         image_path,
@@ -69,7 +72,6 @@ def build_data_loader(image_path: Union[str, Path], config: dict, uses_absolute_
     )
     return loader
 
-
 def get_data_loader(dataset_json_path: Path, dataset_name: str, args: argparse.Namespace, config: dict,
                     validation: bool = False) -> DataLoader:
     # TODO: refactor this function and called functions so that only one of args and config is needed
@@ -78,10 +80,8 @@ def get_data_loader(dataset_json_path: Path, dataset_name: str, args: argparse.N
     else:
         loader_func = resilient_loader
 
-    if dataset_name == 'wpi':  # TODO: rename
-        dataset_class = functools.partial(AugmentedDataset,
-                                          class_to_color_map_path=Path(args.class_to_color_map),
-                                          image_size=config['image_size'],
+    if dataset_name == 'dice':
+        dataset_class = functools.partial(AugmentedDataset, image_size=config['image_size'],
                                           num_augmentations=config['num_augmentations'])
         data_loader = build_data_loader(dataset_json_path, config, False, dataset_class=dataset_class,
                                         shuffle_off=validation, drop_last=(not validation), loader_func=loader_func)
