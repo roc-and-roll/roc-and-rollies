@@ -2,6 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "obj-detection",
+      "type": "python",
+      "request": "launch",
+      "program": "object-detection.py",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Try!",
       "type": "python",
       "request": "launch",
