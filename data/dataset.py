@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Dict, Union
 from torch.nn.functional import one_hot
 
@@ -21,7 +22,7 @@ class BaseDataset(JSONDataset):
     def __getitem__(self, index: int) -> Dict[str, torch.Tensor]:
         path = self.image_data[index]['file']
         if self.root is not None:
-            path = os.path.join(self.root, path)  # TODO
+            path = Path(self.root, path)
 
         input_image = self.loader(path)
         input_image = self.transforms(input_image)
@@ -30,7 +31,7 @@ class BaseDataset(JSONDataset):
 
         return {
             'images': input_image,
-            'labels': label
+            'labels': label - 1
         }
 
 
@@ -51,7 +52,7 @@ class AugmentedDataset(BaseDataset):
 
         path = self.image_data[actual_index]['file']
         if self.root is not None:
-            path = os.path.join(self.root, path)  # TODO
+            path = Path(self.root, path)
 
         input_image = self.loader(path)
         if index // original_dataset_length != 0:
@@ -61,9 +62,10 @@ class AugmentedDataset(BaseDataset):
 
         label = int(self.image_data[actual_index]['chosen'])
 
-        l = torch.zeros((1,), dtype=torch.long)
-        l[0] = label - 1
+        # l = torch.zeros((1,), dtype=torch.long)
+        # l[0] = label - 1
         return {
             'images': input_image,
-            'labels': one_hot(l, num_classes=self.num_classes)
+            'labels': label - 1
+            # one_hot(l, num_classes=self.num_classes)
         }

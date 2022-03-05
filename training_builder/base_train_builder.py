@@ -1,5 +1,5 @@
 import functools
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 from pytorch_training import Updater
 from pytorch_training.distributed.utils import strip_parallel_module
@@ -8,10 +8,13 @@ from pytorch_training.triggers import get_trigger
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
+import torch
 
 import global_config
 from networks import load_weights
 from networks.base_network import BaseNetwork
+from utils.data_loading import fill_plot_images
+from visualization.plotter import DicePlotter
 
 
 class BaseTrainBuilder:
@@ -59,22 +62,19 @@ class BaseTrainBuilder:
         return None
 
     def get_image_plotter(self) -> Union[ImagePlotter, None]:
-        # TODO: maybe actually plot some images
-        # if self.rank != 0:
-        #     return None
-        # plot_data_loader = self.val_data_loader if self.val_data_loader is not None else self.train_data_loader
-        # plot_images = fill_plot_images(plot_data_loader, num_desired_images=self.config['display_size'])
-        # image_plotter = SegmentationPlotter(
-        #     plot_images['images'],
-        #     [strip_parallel_module(self.segmentation_network)],
-        #     self.config['log_dir'],
-        #     trigger=get_trigger((self.config['image_save_iter'], 'iteration')),
-        #     plot_to_logger=True,
-        #     class_to_color_map=Path(self.config['class_to_color_map']),
-        #     label_images=torch.stack(plot_images['segmented']).cuda(),
-        # )
-        # return image_plotter
-        return None  # TODO
+        if self.rank != 0:
+            return None
+        plot_data_loader = self.val_data_loader if self.val_data_loader is not None else self.train_data_loader
+        predictions = fill_plot_images(plot_data_loader, num_desired_images=self.config['display_size'])
+        image_plotter = DicePlotter(
+            predictions['images'],
+            [strip_parallel_module(self.network)],
+            self.config['log_dir'],
+            labels=predictions['labels'],
+            trigger=get_trigger((self.config['image_save_iter'], 'iteration')),
+            plot_to_logger=True,
+        )
+        return image_plotter
 
 
 class BaseSingleNetworkTrainBuilder(BaseTrainBuilder):

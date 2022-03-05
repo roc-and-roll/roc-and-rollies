@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, DistributedSampler
 from torchvision import transforms
 
 import global_config
-from data.dataset import AugmentedDataset
+from data.dataset import AugmentedDataset, BaseDataset
 
 
 def resilient_loader(path):
@@ -29,7 +29,7 @@ def get_transforms(image_size, input_dim):
     transform_list = [
         transforms.Resize((image_size, image_size)),
         transforms.ToTensor(),
-        transforms.Normalize((0.5,) * input_dim, (0.5,) * input_dim)  # TODO: ok normalizazion
+        transforms.Normalize((0.5,) * input_dim, (0.5,) * input_dim)
     ]
     transform_list = transforms.Compose(transform_list)
     return transform_list
@@ -81,9 +81,13 @@ def get_data_loader(dataset_json_path: Path, dataset_name: str, args: argparse.N
         loader_func = resilient_loader
 
     if dataset_name == 'dice':
-        dataset_class = functools.partial(AugmentedDataset, image_size=config['image_size'],
-                                          num_classes=config['num_classes'],
-                                          num_augmentations=config['num_augmentations'])
+        if True:
+            dataset_class = functools.partial(AugmentedDataset, image_size=config['image_size'],
+                                            num_classes=config['num_classes'],
+                                            num_augmentations=config['num_augmentations'])
+        else:
+            dataset_class = functools.partial(BaseDataset, image_size=config['image_size'],
+                                            num_classes=config['num_classes'])
         data_loader = build_data_loader(dataset_json_path, config, False, dataset_class=dataset_class,
                                         shuffle_off=validation, drop_last=(not validation), loader_func=loader_func)
     else:
@@ -96,16 +100,16 @@ def fill_plot_images(data_loader: Iterable, num_desired_images: int = 16) -> Dic
     """
         Gathers images to be used with ImagePlotter
     """
-    image_list = defaultdict(list)
+    result = defaultdict(list)
     for batch in data_loader:
-        for image_key, images in batch.items():
-            num_images = 0
-            for image in images:
-                image_list[image_key].append(image)
-                num_images += 1
-                if num_images >= num_desired_images:
-                    break
-            if len(image_list.keys()) == len(batch.keys()) and \
-                    all([len(v) >= num_desired_images for v in image_list.values()]):
-                return image_list
+        num_images = 0
+        for images, labels in zip(batch['images'], batch['labels']):
+            result['images'].append(images)
+            result['labels'].append(labels)
+            num_images += 1
+            if num_images >= num_desired_images:
+                break
+        if len(result.keys()) == len(batch.keys()) and \
+                all([len(v) >= num_desired_images for v in result.values()]):
+            return result
     raise RuntimeError(f"Could not gather enough plot images for display size {num_desired_images}.")

@@ -16,7 +16,7 @@ class StandardUpdater(Updater):
         batch = next(self.iterators['images'])
         batch = {key: value.to(self.device) for key, value in batch.items()}
         images = batch['images'].to(self.device)
-        labels = batch['labels']  # TODO: check if tensor
+        labels = batch['labels']
         reporter = get_current_reporter()
 
         network = self.networks['network']
