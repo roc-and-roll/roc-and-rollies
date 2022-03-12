@@ -40,7 +40,7 @@ class ResNetTrainBuilder(BaseSingleNetworkTrainBuilder):
         self.network = ResNet18(self.config['num_classes'])
 
     def get_optimizers(self) -> Dict[str, Optimizer]:
-        optimizer = GradientClipAdam(self.network.parameters(), **self.optimizer_opts)  # TODO: probs alright?
+        optimizer = GradientClipAdam(self.network.parameters(), **self.optimizer_opts)
         return {'main': optimizer}
 
     def get_updater(self) -> Updater:

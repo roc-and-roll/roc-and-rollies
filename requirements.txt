@@ -1,6 +1,5 @@
 torch==1.9.0+cu111
 torchvision==0.10.0+cu111
-git+https://github.com/Bartzi/pytorch-training.git
 imgaug==0.4.0
 ipython==7.27.0
 numpy==1.20.3
@@ -8,3 +7,4 @@ opencv-python-headless==4.5.3.56
 Pillow==8.3.2
 tensorboard==2.5.0
 tqdm==4.62.2
+-e training_tools

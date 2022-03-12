@@ -5,13 +5,13 @@ import os
 from pathlib import Path
 
 import torch
-from pytorch_training.distributed import synchronize, get_rank, get_world_size
-from pytorch_training.extensions.logger import WandBLogger
-from pytorch_training.extensions.lr_scheduler import LRScheduler
-from pytorch_training.trainer import Trainer
-from pytorch_training.triggers import get_trigger
 
 import global_config
+from pytorch_training import Trainer
+from pytorch_training.distributed.utils import synchronize, get_rank, get_world_size
+from pytorch_training.extensions.logger import WandBLogger
+from pytorch_training.extensions.lr_scheduler import LRScheduler
+from pytorch_training.triggers import get_trigger
 from training_builder.base_train_builder import BaseTrainBuilder
 from training_builder.train_builder_selection import get_train_builder_class
 from utils.clamped_cosine import ClampedCosineAnnealingLR
@@ -82,6 +82,7 @@ def main(args: argparse.Namespace, rank: int, world_size: int):
     # TODO: maybe make dummy Objects to circumvent all the ifs
     evaluator = training_builder.get_evaluator(logger)
     if evaluator is not None:
+        # TODO: log confusion matrix: https://wandb.ai/wandb/plots/reports/Confusion-Matrix--VmlldzozMDg1NTM
         trainer.extend(evaluator)
 
     snapshotter = training_builder.get_snapshotter()
@@ -92,7 +93,6 @@ def main(args: argparse.Namespace, rank: int, world_size: int):
     if image_plotter is not None:
         trainer.extend(image_plotter)
 
-    # TODO: add code somewhere so that `optimizer.step()` is always called before `lr_scheduler.step()`
     lr_scheduler = get_scheduler(config, trainer, training_builder)
     trainer.extend(lr_scheduler)
 
@@ -100,7 +100,6 @@ def main(args: argparse.Namespace, rank: int, world_size: int):
 
     synchronize()
     print('Setup complete. Starting training...')
-    # TODO: (occasionally) there seems to be a broken pipe error when finishing the last epoch of training
     trainer.train()
 
 

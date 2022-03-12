@@ -3,7 +3,10 @@ from typing import Dict, List, Union
 
 from pytorch_training import Updater
 from pytorch_training.distributed.utils import strip_parallel_module
-from pytorch_training.extensions import ImagePlotter, Snapshotter, Evaluator, Logger
+from pytorch_training.extensions.evaluator import Evaluator
+from pytorch_training.extensions.image_plotter import ImagePlotter
+from pytorch_training.extensions.logger import Logger
+from pytorch_training.extensions.snapshot import Snapshotter
 from pytorch_training.triggers import get_trigger
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import Optimizer
